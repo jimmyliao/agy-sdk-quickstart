@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# uv / venv
+.venv/
+uv.lock
+
+# 小助教 clone 進來的官方 skill（執行期產生，不入版控）
+vendor/
+
+# step 8 產出的學員報告
+my-life-report.md
+
+# 環境
+.env

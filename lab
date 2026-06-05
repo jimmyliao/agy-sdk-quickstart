@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# lab — 小白只記一個字的 lab 包裝器
+#   ./lab 3          跑 step 3
+#   ./lab fix 3      把 solutions/step3 拷回 steps/（卡住救援）
+#   ./lab check      環境體檢（key / shop / sdk）
+set -euo pipefail
+cd "$(dirname "$0")"
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"  # 讓 steps/ 找得到 common.py
+SHOP="${SHOP_URL:-https://shop.leapcore.tw}"
+
+step_file() { ls steps/step"$1"_*.py 2>/dev/null | head -1; }
+sol_file()  { ls solutions/step"$1"_*.py 2>/dev/null | head -1; }
+
+cmd_run() {
+  local n="$1" f
+  f="$(step_file "$n")"
+  [ -n "$f" ] || { echo "❌ 找不到 step $n（有 1–8）"; exit 1; }
+  echo "▶️  跑 $f"
+  exec uv run python "$f"
+}
+
+cmd_fix() {
+  local n="$1" s d
+  s="$(sol_file "$n")"; [ -n "$s" ] || { echo "❌ 沒有 step $n 的解答"; exit 1; }
+  d="steps/$(basename "$s")"
+  cp "$s" "$d"
+  echo "✅ 已把解答拷到 $d"
+  echo "   現在跑：./lab $n"
+}
+
+cmd_check() {
+  echo "🩺 環境體檢"
+  echo "──────────────────────────────"
+  # 1) GEMINI_API_KEY
+  if [ -n "${GEMINI_API_KEY:-}" ]; then
+    echo "✅ GEMINI_API_KEY 已設定"
+  else
+    echo "❌ GEMINI_API_KEY 沒設定 → 照 signup 卡片貼：export GEMINI_API_KEY=AIza...（你的 key）"
+  fi
+  # 2) STUDENT_ID
+  if [ -n "${STUDENT_ID:-}" ]; then
+    echo "✅ STUDENT_ID = ${STUDENT_ID}"
+  else
+    echo "❌ STUDENT_ID 沒設定 → export STUDENT_ID=你的暱稱（signup 卡片上那個，例如 拉麵-42）"
+  fi
+  # 3) shop /health
+  if curl -fsS --max-time 8 "$SHOP/health" >/dev/null 2>&1; then
+    echo "✅ 商城連得上（$SHOP）"
+  else
+    echo "❌ 連不到商城 $SHOP → 檢查網路；或 export SHOP_URL=<備援網址>"
+  fi
+  # 4) sdk import
+  if uv run python -c "import google.antigravity" >/dev/null 2>&1; then
+    echo "✅ Antigravity SDK 可 import"
+  else
+    echo "❌ SDK 還沒裝好 → 先跑 ./setup.sh（或 uv sync）"
+  fi
+  echo "──────────────────────────────"
+}
+
+case "${1:-}" in
+  check) cmd_check ;;
+  fix)   [ -n "${2:-}" ] || { echo "用法：./lab fix N"; exit 1; }; cmd_fix "$2" ;;
+  ""|-h|--help)
+    echo "用法：./lab N | ./lab fix N | ./lab check"
+    ;;
+  *)     cmd_run "$1" ;;
+esac

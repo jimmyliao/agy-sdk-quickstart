@@ -1,0 +1,14 @@
+[project]
+name = "agy-sdk-quickstart"
+version = "0.1.0"
+description = "Build with AI 2026 Taipei — Antigravity SDK 八步實戰 lab（Cloud Shell 自走教材）"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-antigravity",
+    "httpx",
+]
+
+[tool.uv]
+# 鎖在這個範圍即可，活動當天 Cloud Shell 用 uv 暖快取
+package = false
