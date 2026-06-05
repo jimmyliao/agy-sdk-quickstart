@@ -31,8 +31,9 @@ async def budget_guard(data: types.ToolCall) -> types.HookResult:
 
 async def main() -> None:
     cfg = ag.LocalAgentConfig(
-        system_instructions="你是購物助理，使用者要買什麼就查、加購物車、結帳。",
-        tools=[search_products, add_to_cart, view_cart, checkout],
+        system_instructions="你是購物助理，使用者要買什麼就查、加購物車、結帳。"
+        "要結帳時【直接呼叫 checkout 工具】，不要先用文字徵求同意——確認由系統關卡處理。",
+        tools=[search_products, add_to_cart, view_cart, checkout, clear_cart],
         hooks=[budget_guard],
         model="gemini-flash-latest",
         api_key=os.environ["GEMINI_API_KEY"],

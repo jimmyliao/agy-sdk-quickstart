@@ -87,6 +87,11 @@ def view_cart() -> dict:
     return _get(f"/cart/{STUDENT}")
 
 
+def clear_cart() -> dict:
+    """清空購物車（重新開始、或使用者反悔不買時用）。"""
+    return _post(f"/cart/{STUDENT}/clear")
+
+
 def checkout() -> dict:
     """結帳：把購物車變成正式訂單（會清空購物車、跳上投影幕訂單牆）。
 
