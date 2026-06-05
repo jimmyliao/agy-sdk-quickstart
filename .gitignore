@@ -13,5 +13,8 @@ vendor/
 # step 8 產出的學員報告
 my-life-report.md
 
+# step 9 語音網頁的入站錄音檔（執行期產生）
+assets/voice-*
+
 # 環境
 .env

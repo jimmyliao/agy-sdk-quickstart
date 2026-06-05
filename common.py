@@ -35,18 +35,22 @@ def _post(path: str, json=None, headers=None):
     return r.json()
 
 
-def search_products(q: str = "", max_price: int = 0) -> dict:
-    """搜尋商城商品。想知道「店裡有沒有 X」「預算內有什麼」就用這個。
+def search_products(q: str = "", max_price: int = 0, category: str = "") -> dict:
+    """搜尋商城商品。想知道「店裡有沒有 X」「預算內有什麼」「推薦某分類」就用這個。
 
     Args:
       q: 關鍵字，例如「耳機」「咖啡」「瑜珈墊」。留空代表列出全部。
       max_price: 預算上限（新台幣）。0 代表不限價。
+      category: 分類篩選，可選：3C/家電/食品/健康食品/男裝/女裝/美妝/居家/運動/書籍/活動限定。
+        使用者要「推薦某類商品」時，用 category 撈出來再依評分/銷量推薦。
+        若回傳 count=0，回應裡的 hint 與 suggestions 會給可用分類與高評分替代品——
+        請優雅地告訴使用者沒有該商品，並推薦替代選項。
 
     Returns:
       dict：count 與 products 清單（含 id/name/price/rating/sold）。
       要加入購物車時，請用 products 裡的 id 給 add_to_cart。
     """
-    return _get("/products", q=q or None, max_price=max_price or None)
+    return _get("/products", q=q or None, max_price=max_price or None, category=category or None)
 
 
 def get_weather(city: str = "Taipei") -> dict:

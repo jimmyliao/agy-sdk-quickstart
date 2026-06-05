@@ -27,9 +27,10 @@ export STUDENT_ID=你的暱稱
 
 | 指令 | 作用 |
 |---|---|
-| `./lab N` | 跑 step N（1–8） |
+| `./lab N` | 跑 step N（1–8，外加選做 9） |
 | `./lab fix N` | 卡住？把 `solutions/stepN` 拷回 `steps/` |
 | `./lab check` | 環境體檢（key / 商城 / SDK 各印 ✅/❌） |
+| `./lab 9` | 🎤 選做：啟動「跟你的 agent 說話」語音網頁（Cloud Shell 網頁預覽 8080） |
 
 🤖 還是卡住？開**第二個分頁**問小助教：`uv run python helper.py`（用 agent 學 agent）。
 
@@ -45,6 +46,32 @@ export STUDENT_ID=你的暱稱
 | 6 | guardrail | hook 做消費上限（optional） |
 | 7 | multimodal | 丟語音 `types.Audio` → 點外送 🍜 |
 | 8 | doc agent | agent 用內建 `create_file` 自動寫報告 🏁 |
+| 9 | voice web（選做）| 開網頁、**按住麥克風講話**跟 agent 對話 🎤（FastAPI/uvicorn + 瀏覽器麥克風）|
+
+## 🎤 Step 9（選做）：跟你的 agent 說話
+
+時間有餘的話玩這關。它把前面那隻 agent 包進一個**手機友善的網頁**，
+你直接「按住 🎤 講話」就能下指令。
+
+```bash
+./lab 9          # 啟動語音網頁（uvicorn 0.0.0.0:8080）
+```
+
+**在 Cloud Shell 看畫面**：右上角點 **「網頁預覽」**（一個小螢幕 icon）→
+**「透過以下連接埠預覽」→ 8080**，瀏覽器就會開出錄音頁。
+
+頁面有三條輸入路徑（由易到難保底）：
+1. **主模式**：按住 🎤 錄音 → 放開送出（走原生 `types.Audio` 多模態）。
+2. **🗣️ 瀏覽器轉文字**：Chrome 內建 Web Speech API，辨識成文字再送。
+3. **純文字輸入框**：最終保底，打字也能用。
+
+> ⚠️ **webm 相容性**：瀏覽器 `MediaRecorder` 多半錄成 `webm/opus`，但 SDK 的
+> `types.Audio` 只收 wav/mp3/ogg/aac/flac/m4a。後端會在有 `ffmpeg` 時自動把
+> webm 轉成 ogg/opus；**沒有 ffmpeg 又錄到 webm 時，請改用「🗣️ 轉文字」按鈕**。
+> Cloud Shell 通常有 ffmpeg，本機若沒有就靠轉文字保底。
+
+> ⚠️ 這關的結帳走「**web 模式自動核可**」（網頁沒有終端機可以按 y/N），
+> agent 想結帳會直接成立，試玩時請留意。
 
 ## 📁 結構
 
@@ -54,7 +81,7 @@ lab             # ./lab N 跑步 · ./lab fix N 拷解答 · ./lab check 體檢
 tutorial.md     # Cloud Shell 教學側欄
 common.py       # AgentMall (shop.leapcore.tw) tools — agent 的「手」
 helper.py       # 🤖 小助教 agent（載入官方 SDK skill）
-steps/          # step1..8（每檔 ≤35 行，頂部 docstring = 目標+checkpoint）
+steps/          # step1..8（每檔 ≤35 行，頂部 docstring = 目標+checkpoint）＋選做 step9 語音網頁
 solutions/      # 完整解答
 ```
 

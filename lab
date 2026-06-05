@@ -14,8 +14,13 @@ sol_file()  { ls solutions/step"$1"_*.py 2>/dev/null | head -1; }
 cmd_run() {
   local n="$1" f
   f="$(step_file "$n")"
-  [ -n "$f" ] || { echo "❌ 找不到 step $n（有 1–8）"; exit 1; }
+  [ -n "$f" ] || { echo "❌ 找不到 step $n（有 1–8，外加選做 9）"; exit 1; }
   echo "▶️  跑 $f"
+  if [ "$n" = "9" ]; then
+    echo "🎤 啟動語音網頁 agent（uvicorn 0.0.0.0:8080）…"
+    echo "   👉 Cloud Shell：右上『網頁預覽』→『透過以下連接埠預覽 8080』即可開"
+    echo "   👉 想自訂埠：PORT=xxxx ./lab 9  ｜ 停掉：Ctrl-C"
+  fi
   exec uv run python "$f"
 }
 
@@ -63,6 +68,7 @@ case "${1:-}" in
   fix)   [ -n "${2:-}" ] || { echo "用法：./lab fix N"; exit 1; }; cmd_fix "$2" ;;
   ""|-h|--help)
     echo "用法：./lab N | ./lab fix N | ./lab check"
+    echo "  N = 1–8 主線；9 = 選做語音網頁（Cloud Shell 網頁預覽 8080）"
     ;;
   *)     cmd_run "$1" ;;
 esac
