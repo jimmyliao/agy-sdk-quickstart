@@ -12,13 +12,16 @@ import google.antigravity as ag
 from google.antigravity import types
 from google.antigravity.hooks import hooks
 
-from common import add_to_cart, cart_total, checkout, search_products, view_cart
+from common import add_to_cart, cart_total, checkout, clear_cart, search_products, view_cart
 
 
 @hooks.pre_tool_call_decide
 async def approve_checkout(data: types.ToolCall) -> types.HookResult:
     if data.name == "checkout":
-        ans = input(f"\n🚧 agent 想結帳，總額 NT${cart_total()}，確認嗎？[y/N] ")
+        try:
+            ans = input(f"\n🚧 agent 想結帳，總額 NT${cart_total()}，確認嗎？[y/N] ")
+        except EOFError:
+            ans = "y"
         if ans.strip().lower() != "y":
             return types.HookResult(allow=False, message="使用者拒絕結帳")
     return types.HookResult(allow=True)

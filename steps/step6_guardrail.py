@@ -12,7 +12,7 @@ import google.antigravity as ag
 from google.antigravity import types
 from google.antigravity.hooks import hooks
 
-from common import add_to_cart, cart_total, checkout, search_products, view_cart
+from common import add_to_cart, cart_total, checkout, clear_cart, search_products, view_cart
 
 LIMIT = 3000  # 消費上限（新台幣）
 
