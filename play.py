@@ -27,19 +27,31 @@ TOOLS = [search_products, get_weather, add_to_cart, view_cart, clear_cart,
          checkout, order_food, book_table]
 
 SYSTEM = (
-    "你是親切的購物與生活助理。使用者要找東西用 search_products、加購物車用 add_to_cart、"
+    "你是親切俐落的購物與生活助理。使用者要找東西用 search_products、加購物車用 add_to_cart、"
     "看購物車用 view_cart、結帳用 checkout、叫外送用 order_food、訂位用 book_table。"
-    "要結帳時直接呼叫 checkout 工具。回答簡短、繁體中文。"
+    "使用者說『買/結帳/下單』時，把該加的加進購物車後【直接呼叫 checkout 工具完成結帳】，"
+    "不要只用文字問要不要，直接做。回答簡短、繁體中文。"
 )
+
+INTRO = """🛒 歡迎來到 AgentMall！我是你的購物 agent。
+
+想買什麼、想吃什麼、想訂位？直接打字跟我說就好，例如：
+   · 幫我找一個降噪耳機，然後結帳
+   · 我想叫一份拉麵外送
+   · 幫我訂今晚 7 點 2 個人的位子
+   · 預算 500 內推薦點咖啡
+
+（打字後你會看到三層鏈：🔧 我決定用哪個工具 → 🌐 真的打商城 → 🤖 我回你。
+  結帳成功，你的訂單會即時跳上投影幕 /wall 🎉   輸入 exit 離開。）"""
 
 
 async def main():
     if not os.environ.get("GEMINI_API_KEY"):
-        print("⚠️ 還沒設 GEMINI_API_KEY —— 先貼上 signup 給你的兩行 export 再跑 ./lab play")
+        print("⚠️ 還沒設 GEMINI_API_KEY —— 先貼上 signup 給你的兩行 export 再跑 ./lab")
         sys.exit(1)
     student = os.environ.get("STUDENT_ID", "guest")
-    print(__doc__)
-    print(f"（你的身分：{student} · 訂單會以這個名字上牆）\n")
+    print(INTRO)
+    print(f"\n（你的身分：{student} · 訂單會以這個名字上牆）")
 
     cfg = ag.LocalAgentConfig(
         system_instructions=SYSTEM,
