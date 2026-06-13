@@ -18,3 +18,9 @@ assets/voice-*
 
 # 環境
 .env
+
+# 學員身分檔（含 key，絕不上傳）
+.lab_env
+*.key
+.env.*
+signups.json
