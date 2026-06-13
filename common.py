@@ -135,7 +135,7 @@ def add_to_cart(product_id: str, qty: int = 1) -> dict:
     return _post(f"/cart/{STUDENT}/add", json={"product_id": product_id, "qty": qty})
 
 
-def view_cart() -> dict:
+def view_cart(**_ignore) -> dict:
     """看你目前購物車裡有什麼、總額多少（結帳前先確認）。
 
     Returns:
@@ -144,12 +144,12 @@ def view_cart() -> dict:
     return _get(f"/cart/{STUDENT}")
 
 
-def clear_cart() -> dict:
+def clear_cart(**_ignore) -> dict:
     """清空購物車（重新開始、或使用者反悔不買時用）。"""
     return _post(f"/cart/{STUDENT}/clear")
 
 
-def checkout() -> dict:
+def checkout(**_ignore) -> dict:
     """結帳：把購物車變成正式訂單（會清空購物車、跳上投影幕訂單牆）。
 
     ⚠️ 這是「真的會送出去」的動作，金額不可逆。
