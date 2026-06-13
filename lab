@@ -6,6 +6,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"  # 讓 steps/ 找得到 common.py
+# Cloud Shell 斷線後 export 會消失 → 若之前 ./lab save 過，自動載回身分
+[ -f "$HOME/.lab_env" ] && . "$HOME/.lab_env"
 SHOP="${SHOP_URL:-https://shop.leapcore.tw}"
 
 step_file() { ls steps/step"$1"_*.py 2>/dev/null | head -1; }
@@ -63,13 +65,24 @@ cmd_check() {
   echo "──────────────────────────────"
 }
 
+cmd_save() {
+  : "${GEMINI_API_KEY:?❌ 還沒設 GEMINI_API_KEY，先 export 再 ./lab save}"
+  : "${STUDENT_ID:?❌ 還沒設 STUDENT_ID，先 export 再 ./lab save}"
+  printf 'export GEMINI_API_KEY=%s\nexport STUDENT_ID=%s\n' "$GEMINI_API_KEY" "$STUDENT_ID" > "$HOME/.lab_env"
+  chmod 600 "$HOME/.lab_env"
+  echo "✅ 身分已存到 ~/.lab_env"
+  echo "   之後就算 Cloud Shell 斷線重開，./lab 會自動載回，不必再貼 export。"
+}
+
 case "${1:-}" in
   ""|play) exec uv run python play.py ;;   # 裸跑 ./lab = 直接進互動模式
   check)   cmd_check ;;
+  save)    cmd_save ;;
   fix)     [ -n "${2:-}" ] || { echo "用法：./lab fix N"; exit 1; }; cmd_fix "$2" ;;
   -h|--help)
     echo "用法：./lab            → 🛒 直接跟你的購物 agent 對話（主玩法）"
     echo "     ./lab check       → 環境體檢"
+    echo "     ./lab save        → 把目前 key+代號存起來（防 Cloud Shell 斷線要重貼）"
     echo "     ./lab 1–8         → （進階）一步步學怎麼自己把這隻 agent 建出來"
     echo "     ./lab 9           → （選做）語音網頁版"
     echo "     ./lab fix N       → 卡住時把解答拷回來"
