@@ -11,6 +11,8 @@
   STUDENT_ID  你的身分代號（signup 拿到，上牆顯示用）
 """
 import os
+import time
+import traceback
 
 import httpx
 
@@ -20,19 +22,74 @@ STUDENT = os.environ.get("STUDENT_ID", "guest")
 # 結帳賽規則：lab 的 checkout 帶這個 header，手戳 API 不算數
 AGENT_HEADERS = {"X-Via": "agent"}
 
+# 學習模式：讓小白「看得見」agent 每次真的打商城（method/path/狀態/耗時）。
+# 設 LAB_TRACE=0 可關閉。
+_TRACE = os.environ.get("LAB_TRACE", "1") != "0"
+
 _client = httpx.Client(base_url=SHOP, timeout=20.0)
 
 
+def _trace_ok(method, path, status, ms, summary=""):
+    if _TRACE:
+        print(f"   🌐 {method:4} {path:28} → ✅ {status} · {summary}{ms}ms")
+
+
+def _trace_err(method, path, kind, detail, tb=None):
+    if _TRACE:
+        print(f"   🌐 {method:4} {path:28} → ❌ {kind}：{detail}")
+        if tb:
+            last = tb.strip().splitlines()[-1]
+            print(f"      📋 {last}")
+        print(f"      💡 連不到商城？檢查網路、或舉手找小幫手；商城忙線就等 10 秒再試。")
+
+
+def _summarize(data):
+    """從回應抓一句人話摘要（讓小白知道發生什麼）。"""
+    if not isinstance(data, dict):
+        return ""
+    if "count" in data:
+        return f"{data['count']} 件 · "
+    if "total" in data:
+        return f"購物車 NT${data['total']} · "
+    if "order_id" in data:
+        return f"訂單 {data['order_id']} · "
+    if "eta_minutes" in data:
+        return f"外送 {data['eta_minutes']} 分 · "
+    return ""
+
+
 def _get(path: str, **params):
-    r = _client.get(path, params={k: v for k, v in params.items() if v is not None})
-    r.raise_for_status()
-    return r.json()
+    t0 = time.time()
+    try:
+        r = _client.get(path, params={k: v for k, v in params.items() if v is not None})
+        ms = int((time.time() - t0) * 1000)
+        r.raise_for_status()
+        data = r.json()
+        _trace_ok("GET", path, r.status_code, ms, _summarize(data))
+        return data
+    except httpx.HTTPStatusError as e:
+        _trace_err("GET", path, f"HTTP {e.response.status_code}", e.response.text[:60])
+        raise
+    except Exception as e:
+        _trace_err("GET", path, "連線失敗", str(e)[:60], traceback.format_exc())
+        raise
 
 
 def _post(path: str, json=None, headers=None):
-    r = _client.post(path, json=json, headers=headers)
-    r.raise_for_status()
-    return r.json()
+    t0 = time.time()
+    try:
+        r = _client.post(path, json=json, headers=headers)
+        ms = int((time.time() - t0) * 1000)
+        r.raise_for_status()
+        data = r.json()
+        _trace_ok("POST", path, r.status_code, ms, _summarize(data))
+        return data
+    except httpx.HTTPStatusError as e:
+        _trace_err("POST", path, f"HTTP {e.response.status_code}", e.response.text[:60])
+        raise
+    except Exception as e:
+        _trace_err("POST", path, "連線失敗", str(e)[:60], traceback.format_exc())
+        raise
 
 
 def search_products(q: str = "", max_price: int = 0, category: str = "") -> dict:
