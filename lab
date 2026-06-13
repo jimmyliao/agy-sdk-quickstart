@@ -65,10 +65,12 @@ cmd_check() {
 
 case "${1:-}" in
   check) cmd_check ;;
+  play)  echo "🎮 試玩場：直接打字跟 agent 說話（exit 離開）"; exec uv run python play.py ;;
   fix)   [ -n "${2:-}" ] || { echo "用法：./lab fix N"; exit 1; }; cmd_fix "$2" ;;
   ""|-h|--help)
-    echo "用法：./lab N | ./lab fix N | ./lab check"
-    echo "  N = 1–8 主線；9 = 選做語音網頁（Cloud Shell 網頁預覽 8080）"
+    echo "用法：./lab play | ./lab N | ./lab fix N | ./lab check"
+    echo "  play = 🎮 先玩再學（零編輯，打字跟 agent 說話，看三層鏈 + 訂單上 /wall）"
+    echo "  N    = 1–8 主線；9 = 選做語音網頁（Cloud Shell 網頁預覽 8080）"
     ;;
   *)     cmd_run "$1" ;;
 esac
