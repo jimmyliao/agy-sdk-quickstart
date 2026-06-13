@@ -74,8 +74,32 @@ async def main():
                 print("掰掰，接著去跑 ./lab 1 學怎麼自己建出這隻 agent！")
                 return
             print()  # 讓三層鏈跟你的輸入隔開
-            r = await agent.chat(msg)
-            print(f"🤖 {await r.text()}")
+            try:
+                r = await agent.chat(msg)
+                txt = await r.text()
+            except Exception as e:
+                txt = str(e)
+            if _is_rate_limit(txt):
+                _rate_limit_hint()
+            elif txt.strip():
+                print(f"🤖 {txt}")
+            else:
+                print("⚠️ 這次沒拿到回應，再試一次；或 ./lab check 看看環境。")
+
+
+# 免費金鑰每分鐘有呼叫上限（~10-15 RPM）；連續快速玩會撞到 → 給友善提示而非生 error
+_RL_MARKERS = ("429", "resource_exhausted", "rate limit", "ratelimit", "quota", "exhausted", "too many requests")
+
+
+def _is_rate_limit(s: str) -> bool:
+    s = (s or "").lower()
+    return any(m in s for m in _RL_MARKERS)
+
+
+def _rate_limit_hint() -> None:
+    print("🐢 慢一點～你的免費金鑰每分鐘有呼叫上限（約 10–15 次）。")
+    print("   一個請求 agent 會想好幾步，所以連續快玩很容易到頂。")
+    print("   👉 等 30–60 秒再試，或一步一步慢慢來，通常就不會撞到。")
 
 
 if __name__ == "__main__":
