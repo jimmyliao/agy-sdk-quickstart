@@ -14,6 +14,7 @@
 輸入 exit 離開。
 """
 import asyncio
+import logging
 import os
 import sys
 
@@ -25,6 +26,9 @@ from trace_hooks import TRACE_HOOKS
 
 TOOLS = [search_products, get_weather, add_to_cart, view_cart, clear_cart,
          checkout, order_food, book_table]
+
+# model fallback：免費層每個 model 有獨立 RPM（~5/分鐘），撞了就換下一個 → 額度疊加
+MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"]
 
 SYSTEM = (
     "你是親切俐落的購物與生活助理。使用者要找東西用 search_products、加購物車用 add_to_cart、"
@@ -45,50 +49,12 @@ INTRO = """🛒 歡迎來到 AgentMall！我是你的購物 agent。
   結帳成功，你的訂單會即時跳上投影幕 /wall 🎉   輸入 exit 離開。）"""
 
 
-async def main():
-    if not os.environ.get("GEMINI_API_KEY"):
-        print("⚠️ 還沒設 GEMINI_API_KEY —— 先貼上 signup 給你的兩行 export 再跑 ./lab")
-        sys.exit(1)
-    student = os.environ.get("STUDENT_ID", "guest")
-    print(INTRO)
-    print(f"\n（你的身分：{student} · 訂單會以這個名字上牆）")
-
-    cfg = ag.LocalAgentConfig(
-        system_instructions=SYSTEM,
-        tools=TOOLS,
-        hooks=TRACE_HOOKS,
-        model="gemini-flash-latest",
-        api_key=os.environ["GEMINI_API_KEY"],
-        workspaces=[os.getcwd()],
-    )
-    async with ag.Agent(cfg) as agent:
-        while True:
-            try:
-                msg = input("\n你 > ").strip()
-            except (EOFError, KeyboardInterrupt):
-                print("\n掰掰，接著去跑 ./lab 1 學怎麼自己建出這隻 agent！")
-                return
-            if not msg:
-                continue
-            if msg.lower() in ("exit", "quit", "bye", "掰掰"):
-                print("掰掰，接著去跑 ./lab 1 學怎麼自己建出這隻 agent！")
-                return
-            print()  # 讓三層鏈跟你的輸入隔開
-            try:
-                r = await agent.chat(msg)
-                txt = await r.text()
-            except Exception as e:
-                txt = str(e)
-            if _is_rate_limit(txt):
-                _rate_limit_hint()
-            elif txt.strip():
-                print(f"🤖 {txt}")
-            else:
-                print("⚠️ 這次沒拿到回應，再試一次；或 ./lab check 看看環境。")
-
-
-# 免費金鑰每分鐘有呼叫上限（~10-15 RPM）；連續快速玩會撞到 → 給友善提示而非生 error
-_RL_MARKERS = ("429", "resource_exhausted", "rate limit", "ratelimit", "quota", "exhausted", "too many requests")
+# ── rate-limit 偵測 ──────────────────────────────────
+# 免費金鑰 RPM 很低（gemini-flash 免費層 5 次/分鐘）；撞到時 SDK 把 429 印在 log，
+# 且會「關掉 agent session（WebSocket 1000）」→ 之後回 garbage。所以要：
+#   ① 從 log 抓 429  ② 偵測 1000 garbage  ③ 每輪用全新 agent 避免 session 中毒
+_RL_MARKERS = ("429", "resource_exhausted", "rate limit", "ratelimit", "quota",
+               "exhausted", "too many requests", "free_tier")
 
 
 def _is_rate_limit(s: str) -> bool:
@@ -96,10 +62,85 @@ def _is_rate_limit(s: str) -> bool:
     return any(m in s for m in _RL_MARKERS)
 
 
+def _looks_broken(s: str) -> bool:
+    # 429 殺掉 session 後，後續 chat 會回 WebSocket 關閉碼之類的 garbage
+    s = (s or "").lower()
+    return ("received 1000" in s) or ("sent 1000" in s) or (s.strip() == "ok")
+
+
 def _rate_limit_hint() -> None:
-    print("🐢 慢一點～你的免費金鑰每分鐘有呼叫上限（約 10–15 次）。")
-    print("   一個請求 agent 會想好幾步，所以連續快玩很容易到頂。")
-    print("   👉 等 30–60 秒再試，或一步一步慢慢來，通常就不會撞到。")
+    print("🐢 撞到免費金鑰的每分鐘上限了（gemini-flash 免費層只有 5 次/分鐘）。")
+    print("   一個請求 agent 會想好幾步，所以一兩個動作就到頂。")
+    print("   👉 等約 60 秒再打字就能繼續（agent 已自動重開，不會卡死）。")
+
+
+class _RLWatch(logging.Handler):
+    """攔 SDK 印在 log 的 429（不在回傳/例外裡，要從 log 抓）。"""
+    def __init__(self):
+        super().__init__()
+        self.hit = False
+
+    def emit(self, record):
+        try:
+            if _is_rate_limit(record.getMessage()):
+                self.hit = True
+        except Exception:
+            pass
+
+
+_rl_watch = _RLWatch()
+logging.getLogger().addHandler(_rl_watch)
+logging.getLogger().setLevel(logging.WARNING)
+
+
+async def main():
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("⚠️ 還沒設 GEMINI_API_KEY —— 到 ai.dev/apikey 拿免費金鑰，export 後再跑 ./lab")
+        sys.exit(1)
+    student = os.environ.get("STUDENT_ID", "guest")
+    api_key = os.environ["GEMINI_API_KEY"]
+    print(INTRO)
+    print(f"\n（你的身分：{student} · 訂單會以這個名字上牆）")
+
+    def make_cfg(model):
+        return ag.LocalAgentConfig(
+            system_instructions=SYSTEM, tools=TOOLS, hooks=TRACE_HOOKS,
+            model=model, api_key=api_key, workspaces=[os.getcwd()],
+        )
+
+    while True:
+        try:
+            msg = input("\n你 > ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n掰掰，接著去跑 ./lab 1 學怎麼自己建出這隻 agent！")
+            return
+        if not msg:
+            continue
+        if msg.lower() in ("exit", "quit", "bye", "掰掰"):
+            print("掰掰，接著去跑 ./lab 1 學怎麼自己建出這隻 agent！")
+            return
+        print()  # 讓三層鏈跟你的輸入隔開
+        txt, ok = "", False
+        # 依序試每個 model：撞 RPM 就換下一個（每輪全新 agent，避免 session 中毒）
+        for i, model in enumerate(MODELS):
+            if i > 0:
+                print(f"   🔁 {MODELS[i-1]} 額度滿了，換 {model} 繼續…")
+            _rl_watch.hit = False
+            try:
+                async with ag.Agent(make_cfg(model)) as agent:
+                    r = await agent.chat(msg)
+                    txt = await r.text()
+            except Exception as e:
+                txt = str(e)
+            if not (_rl_watch.hit or _is_rate_limit(txt) or _looks_broken(txt)):
+                ok = True
+                break
+        if ok and txt.strip():
+            print(f"🤖 {txt}")
+        elif not ok:
+            _rate_limit_hint()
+        else:
+            print("⚠️ 這次沒拿到完整回應，等一下再試一次；或 ./lab check 看看環境。")
 
 
 if __name__ == "__main__":

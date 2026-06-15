@@ -65,7 +65,7 @@ helper.py       # AI 小助教
 
 - Python ≥ 3.11 + [`uv`](https://docs.astral.sh/uv/)
 - 一把免費 Gemini API key → **[ai.dev/apikey](https://ai.dev/apikey)**
-  - ⚠️ 免費層每分鐘有呼叫上限（~10–15 RPM）。一個請求 agent 會想好幾步，連續快玩容易撞到——慢慢來、或等 30–60 秒即可。
+  - ⚠️ 免費層每個 model 每分鐘約 5 次（RPM）。一個請求 agent 會想好幾步，所以一兩個動作就到頂。`./lab` 會在 `gemini-3.5-flash` / `gemini-3.1-flash-lite` 間自動 fallback 疊加額度；真的撞到就等約 60 秒。
 
 ## See also
 
