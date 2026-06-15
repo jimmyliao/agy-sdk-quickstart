@@ -108,6 +108,7 @@ async def main():
             model=model, api_key=api_key, workspaces=[os.getcwd()],
         )
 
+    model_idx = 0  # 記住目前可用的 model，跨輪保留 → 不用每輪都先撞一次 3.5-flash
     while True:
         try:
             msg = input("\n你 > ").strip()
@@ -121,10 +122,9 @@ async def main():
             return
         print()  # 讓三層鏈跟你的輸入隔開
         txt, ok = "", False
-        # 依序試每個 model：撞 RPM 就換下一個（每輪全新 agent，避免 session 中毒）
-        for i, model in enumerate(MODELS):
-            if i > 0:
-                print(f"   🔁 {MODELS[i-1]} 額度滿了，換 {model} 繼續…")
+        # 從「上次可用的 model」開始試；撞 RPM 才換下一個（每輪全新 agent，避免 session 中毒）
+        for _ in range(len(MODELS)):
+            model = MODELS[model_idx]
             _rl_watch.hit = False
             try:
                 async with ag.Agent(make_cfg(model)) as agent:
@@ -135,6 +135,9 @@ async def main():
             if not (_rl_watch.hit or _is_rate_limit(txt) or _looks_broken(txt)):
                 ok = True
                 break
+            nxt = (model_idx + 1) % len(MODELS)
+            print(f"   🔁 {model} 額度滿了，換 {MODELS[nxt]} 繼續…")
+            model_idx = nxt  # 記住換到的 model，下一輪直接從這開始
         if ok and txt.strip():
             print(f"🤖 {txt}")
         elif not ok:

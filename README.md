@@ -67,6 +67,14 @@ helper.py       # AI 小助教
 - 一把免費 Gemini API key → **[ai.dev/apikey](https://ai.dev/apikey)**
   - ⚠️ 免費層每個 model 每分鐘約 5 次（RPM）。一個請求 agent 會想好幾步，所以一兩個動作就到頂。`./lab` 會在 `gemini-3.5-flash` / `gemini-3.1-flash-lite` 間自動 fallback 疊加額度；真的撞到就等約 60 秒。
 
+## 官方資源（想更深入 / 自己練習）
+
+- 📖 **SDK 總覽**：<https://antigravity.google/docs/sdk-overview>
+- 📝 **開發者指南**：[Google Antigravity SDK Developer Guide — Karl Weinmeister](https://www.linkedin.com/pulse/google-antigravity-sdk-developer-guide-karl-weinmeister-nymsc/)
+- 🧪 **官方範例（拿來自己練）**：<https://github.com/google-antigravity/antigravity-sdk-python/tree/main/examples>
+- 🤖 **問 AI 小助教**：`uv run python helper.py`（用 agent 學 agent，載入官方 SDK skill）
+- 🔍 hooks/tools 原始碼：裝好後在 `.venv/.../google/antigravity/`
+
 ## See also
 
 - [agy-cli-quickstart](https://github.com/jimmyliao/agy-cli-quickstart) — CLI 版 lab（@ BWAI Tainan）
