@@ -16,8 +16,8 @@ sol_file()  { ls solutions/step"$1"_*.py 2>/dev/null | head -1; }
 cmd_run() {
   local n="$1" f
   f="$(step_file "$n")"
-  [ -n "$f" ] || { echo "❌ 找不到 step $n（有 1–8，外加選做 9）"; exit 1; }
-  echo "▶️  跑 $f"
+  [ -n "$f" ] || { echo "❌ 找不到 step ${n}（有 1–8，外加選做 9）"; exit 1; }
+  echo "▶️  跑 ${f}"
   if [ "$n" = "9" ]; then
     echo "🎤 啟動語音網頁 agent（uvicorn 0.0.0.0:8080）…"
     echo "   👉 Cloud Shell：右上『網頁預覽』→『透過以下連接埠預覽 8080』即可開"
@@ -42,19 +42,19 @@ cmd_check() {
   if [ -n "${GEMINI_API_KEY:-}" ]; then
     echo "✅ GEMINI_API_KEY 已設定"
   else
-    echo "❌ GEMINI_API_KEY 沒設定 → 照 signup 卡片貼：export GEMINI_API_KEY=AIza...（你的 key）"
+    echo "❌ GEMINI_API_KEY 沒設定 → 到 ai.dev/apikey 拿免費金鑰，貼：export GEMINI_API_KEY=AIza...（你的金鑰）"
   fi
   # 2) STUDENT_ID
   if [ -n "${STUDENT_ID:-}" ]; then
     echo "✅ STUDENT_ID = ${STUDENT_ID}"
   else
-    echo "❌ STUDENT_ID 沒設定 → export STUDENT_ID=你的暱稱（signup 卡片上那個，例如 拉麵-42）"
+    echo "❌ STUDENT_ID 沒設定 → export STUDENT_ID=u0xx（報到頁那個；任意英數也可，例如 jimmy-test）"
   fi
-  # 3) shop /health
-  if curl -fsS --max-time 8 "$SHOP/health" >/dev/null 2>&1; then
-    echo "✅ 商城連得上（$SHOP）"
+  # 3) shop /health（${SHOP} 一定要大括號：$SHOP 後接全形字在 macOS bash 3.2 會誤判變數名）
+  if curl -fsS --max-time 8 "${SHOP}/health" >/dev/null 2>&1; then
+    echo "✅ 商城連得上（${SHOP}）"
   else
-    echo "❌ 連不到商城 $SHOP → 檢查網路；或 export SHOP_URL=<備援網址>"
+    echo "❌ 連不到商城 ${SHOP} → 檢查網路；或 export SHOP_URL=<備援網址>"
   fi
   # 4) sdk import
   if uv run python -c "import google.antigravity" >/dev/null 2>&1; then
@@ -63,6 +63,7 @@ cmd_check() {
     echo "❌ SDK 還沒裝好 → 先跑 ./setup.sh（或 uv sync）"
   fi
   echo "──────────────────────────────"
+  echo "💡 用免費金鑰？連續快玩會撞每分鐘上限（~10-15 次），慢慢來就好。"
 }
 
 cmd_save() {
