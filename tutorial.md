@@ -27,6 +27,22 @@ export STUDENT_ID=你的暱稱
 
 > 🤖 任何時候卡住，開**第二個分頁**問小助教：`uv run python helper.py`
 
+## 🎮 先玩（主玩法）：直接跟 agent 說話
+
+環境 OK 後，**先別急著自己建**。打 `./lab` 跟現成的 agent 對話：
+
+```bash
+./lab
+```
+
+跟它說「**幫我找降噪耳機並結帳**」→ 看它查商城、加購物車、**自己把帳結了**、訂單跳上投影幕 `/wall` 🎉
+
+> 🏁 **結帳賽**：最先「**透過 agent**」結帳的前幾名有小禮物！（手戳 API 不算，lab 的 checkout 會帶 `X-Via: agent`）
+
+玩夠了、想知道「這隻 agent 是怎麼建出來的」，再從下面 **步驟 1** 開始自己動手。
+
+---
+
 ## 步驟 1 · hello world（中文自介）
 
 ```bash
@@ -59,15 +75,18 @@ export STUDENT_ID=你的暱稱
 
 ✅ checkpoint：印出整齊 JSON，每筆有 品名／價格／推薦理由。
 
-## 步驟 5 · hooks（結帳前停下來問你）🎉
+> ⚠️ 這關要較強的模型（flash-lite 做不出結構化）。若跳「撞限流」提示 = 免費 key 每日額度用完（3.5-flash 一天約 20 次）→ 跳過沒關係，或換把新 key 再跑。
+
+## 步驟 5 · hooks（把「沒問就結帳」變成「先問你」）🎯
 
 ```bash
 ./lab 5
 ```
 
-✅ checkpoint：agent 要結帳時跳 `確認嗎？[y/N]` → 按 `y` → **你的訂單跳上投影幕 /wall** 🎉
+✅ checkpoint：agent 要結帳時跳 `確認嗎？[y/N]` → 按 `y` 才真的結帳。
 
-> 🏁 **結帳賽**：最先「透過 agent」結帳的前幾名有小禮物！（手戳 API 不算，lab 的 checkout 會帶 `X-Via: agent`）
+> 💡 **對照剛剛的 `./lab`**：那時它**沒問就刷卡**；這裡加 5 行 `pre_tool_call_decide` hook，它就**停下來問你**。
+> 這個「暫停」純 LLM API 給不了 —— **這就是 Antigravity SDK 的價值**：你不是用一個黑盒，你能治理它的每一步。
 
 ## 步驟 6 · 消費上限 guardrail（optional）
 
