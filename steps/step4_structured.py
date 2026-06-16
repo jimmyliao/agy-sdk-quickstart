@@ -38,7 +38,12 @@ async def main() -> None:
     async with ag.Agent(cfg) as agent:
         r = await agent.chat("預算 3000 元內，推薦我三樣 3C 好物，給理由。")
         data = await r.structured_output()      # 回傳 dict
-        print(json.dumps(data, ensure_ascii=False, indent=2))
+        if not data or not data.get("picks"):
+            # structured_output 在撞限流時會靜默回 None → 給人話別丟 null
+            print("⚠️ 這次沒拿到結構化結果（多半是免費金鑰撞到每分鐘限流）。"
+                  "等約 60 秒，再 ./lab 4 一次就會出 JSON。")
+        else:
+            print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
