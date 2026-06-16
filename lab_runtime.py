@@ -80,16 +80,17 @@ def run(main_func) -> None:
             except Exception as e:  # noqa: BLE001
                 if not (_is_rate_limit(str(e)) or watch.hit):
                     raise  # 不是限流 → 真的 bug，照樣噴給你看
-                nxt = (_idx() + 1) % len(MODELS)
-                _set_idx(nxt)
-                if attempt < len(MODELS) - 1:
-                    print(f"\n   🔁 撞到限流，換 {MODELS[nxt]} 重跑這步…")
-                    continue
-                _hint()
-                return
-            # 沒有例外 = 這步跑完
-            if watch.hit:
-                print("\n   ⚠️ 剛剛有撞到限流，回答若不完整，等約 60 秒重跑這步。")
+                # 限流例外 → 落到下面換 model 重跑
+            else:
+                # 沒例外但 log 裡有 429 → 回應通常壞掉（null / 半截）→ 也要換 model 重跑
+                if not watch.hit:
+                    return  # 乾淨成功
+            nxt = (_idx() + 1) % len(MODELS)
+            _set_idx(nxt)
+            if attempt < len(MODELS) - 1:
+                print(f"\n   🔁 撞到限流，換 {MODELS[nxt]} 重跑這步…")
+                continue
+            _hint()
             return
         _hint()
     finally:
