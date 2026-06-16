@@ -4,6 +4,8 @@
 每一步都是：**貼一句指令 → 跑 → 看 checkpoint**。卡住按 `./lab fix N` 拿解答。
 （主線 8 步＋一關選做的 step 9「跟你的 agent 說話 🎤」。）
 
+> 🔄 **不小心關掉這個側欄？** 在終端機跑 `cloudshell launch-tutorial tutorial.md` 就能重開（要在 repo 根目錄）。
+
 ## 步驟 0 · 環境暖機
 
 在終端機跑一次（依賴會在演講時間內背景下載好）：
