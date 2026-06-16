@@ -9,12 +9,13 @@ import asyncio
 import os
 
 import google.antigravity as ag
+import lab_runtime
 
 
 async def main() -> None:
     cfg = ag.LocalAgentConfig(
         system_instructions="你是一個友善的繁體中文生活助理，所有回覆都用繁體中文。",
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )
@@ -24,4 +25,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)

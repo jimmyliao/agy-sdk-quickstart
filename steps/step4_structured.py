@@ -10,6 +10,7 @@ import json
 import os
 
 import google.antigravity as ag
+import lab_runtime
 import pydantic
 
 from common import search_products
@@ -30,7 +31,7 @@ async def main() -> None:
         system_instructions="你是購物顧問，先用工具查商品，再依預算給結構化建議。",
         tools=[search_products],
         response_schema=Advice,          # 關鍵：指定回傳 schema
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )
@@ -41,4 +42,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)

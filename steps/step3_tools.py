@@ -10,6 +10,7 @@ import asyncio
 import os
 
 import google.antigravity as ag
+import lab_runtime
 
 from common import get_weather, search_products
 
@@ -18,7 +19,7 @@ async def main() -> None:
     cfg = ag.LocalAgentConfig(
         system_instructions="你是繁體中文購物助理。需要商品或天氣資訊時，務必呼叫工具查證，不要自己編。",
         tools=[search_products, get_weather],
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )
@@ -28,4 +29,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)

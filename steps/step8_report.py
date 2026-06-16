@@ -10,6 +10,7 @@ import asyncio
 import os
 
 import google.antigravity as ag
+import lab_runtime
 
 from common import STUDENT, view_cart
 
@@ -27,7 +28,7 @@ async def main() -> None:
             "內容含：標題、今晚消費總結、明細表、一句溫馨結語，全部繁體中文。"
         ),
         tools=[my_orders],
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],  # 給 agent 在此資料夾寫檔的權限
     )
@@ -38,4 +39,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)

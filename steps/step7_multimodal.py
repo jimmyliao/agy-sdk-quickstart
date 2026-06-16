@@ -10,6 +10,7 @@ import asyncio
 import os
 
 import google.antigravity as ag
+import lab_runtime
 from google.antigravity import types
 
 from common import order_food
@@ -21,7 +22,7 @@ async def main() -> None:
     cfg = ag.LocalAgentConfig(
         system_instructions="你是生活助理，聽懂使用者要吃什麼，用 order_food 叫外送（r01=拉麵 r03=壽司 r04=牛肉麵）。",
         tools=[order_food],
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )
@@ -36,4 +37,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)

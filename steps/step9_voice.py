@@ -31,6 +31,7 @@ import subprocess
 import uuid
 
 import google.antigravity as ag
+import lab_runtime
 from google.antigravity import types
 from google.antigravity.hooks import hooks
 
@@ -100,7 +101,7 @@ def build_agent() -> ag.Agent:
             book_table,
         ],
         hooks=[web_auto_approve],
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )

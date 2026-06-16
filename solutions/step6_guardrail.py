@@ -9,6 +9,7 @@ import asyncio
 import os
 
 import google.antigravity as ag
+import lab_runtime
 from google.antigravity import types
 from google.antigravity.hooks import hooks
 
@@ -35,7 +36,7 @@ async def main() -> None:
         "要結帳時【直接呼叫 checkout 工具】，不要先用文字徵求同意——確認由系統關卡處理。",
         tools=[search_products, add_to_cart, view_cart, checkout, clear_cart],
         hooks=[budget_guard],
-        model="gemini-flash-latest",
+        model=lab_runtime.model(),
         api_key=os.environ["GEMINI_API_KEY"],
         workspaces=[os.getcwd()],
     )
@@ -45,4 +46,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    lab_runtime.run(main)
