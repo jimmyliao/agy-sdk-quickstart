@@ -23,6 +23,7 @@ async def budget_guard(data: types.ToolCall) -> types.HookResult:
     if data.name == "checkout":
         total = cart_total()
         if total > LIMIT:
+            print(f"   🛡️ 超過上限 NT${LIMIT}（目前 NT${total}）→ 擋下 checkout")
             return types.HookResult(
                 allow=False,
                 message=f"超過消費上限 NT${LIMIT}（目前 NT${total}），請先移除部分商品。",
@@ -31,6 +32,7 @@ async def budget_guard(data: types.ToolCall) -> types.HookResult:
 
 
 async def main() -> None:
+    clear_cart()  # 清掉前面步驟的殘留，演示才乾淨（只留待會買的 Dyson）
     cfg = ag.LocalAgentConfig(
         system_instructions="你是購物助理，使用者要買什麼就查、加購物車、結帳。"
         "要結帳時【直接呼叫 checkout 工具】，不要先用文字徵求同意——確認由系統關卡處理。",
