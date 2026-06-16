@@ -39,11 +39,10 @@ async def main() -> None:
         r = await agent.chat("預算 3000 元內，推薦我三樣 3C 好物，給理由。")
         data = await r.structured_output()      # 回傳 dict
         if not data or not data.get("picks"):
-            # structured_output 在撞限流時會靜默回 None → 給人話別丟 null
-            print("⚠️ 這次沒拿到結構化結果（多半是免費金鑰撞到每分鐘限流）。"
-                  "等約 60 秒，再 ./lab 4 一次就會出 JSON。")
-        else:
-            print(json.dumps(data, ensure_ascii=False, indent=2))
+            # 撞限流時 structured_output 靜默回 None（連 429 都沒記 log）→ 主動 raise
+            # 帶限流標記，讓 lab_runtime 換下一個 model（gemini-3.1-flash-lite）重跑這步。
+            raise RuntimeError("free_tier quota exhausted：structured_output 空，換 model 重試")
+        print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
